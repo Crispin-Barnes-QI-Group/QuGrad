@@ -107,10 +107,15 @@ class ExampleSubclass(QuantumSystem):
         * `propagate()`
         * `propagate_collection()`
         * `propagate_all()`
+        * `get_evolution()`
         * `evolved_expectation_value()`
         * `evolved_expectation_value_all()`
+        * `evolved_inner_product()`
+        * `evolved_inner_product_all()`
+        * `evolved_gate_infidelity()`
         * `get_driving_pulses()`
         * `gradient()`
+        * `gate_gradient()`
         """
         ...
     def propagate(self,
@@ -147,6 +152,7 @@ class ExampleSubclass(QuantumSystem):
         --------
         * `propagate_collection()`
         * `propagate_all()`
+        * `get_evolution()`
         """
         ...
     def propagate_collection(self,
@@ -183,6 +189,7 @@ class ExampleSubclass(QuantumSystem):
         --------
         * `propagate()`
         * `propagate_all()`
+        * `get_evolution()`
         """
         ...
     def propagate_all(self,
@@ -221,6 +228,7 @@ class ExampleSubclass(QuantumSystem):
         --------
         * `propagate()`
         * `propagate_collection()`
+        * `get_evolution()`
         """
         ...
     def evolved_expectation_value(self,
@@ -297,13 +305,145 @@ class ExampleSubclass(QuantumSystem):
         Returns
         -------
         NDArray[Shape[n_time_steps+1], complex]
-            The state at each integrator time step (including the initial
-            state).
+            The expectation value of the state at each integrator time step
+            (including the initial state) with respect to the observable.
 
          See Also
         --------
         * `evolved_expectation_value()`
         * `gradient()`
+        """
+        ...
+    def evolved_inner_product(self, *args) -> complex:
+        """
+        Evolves a state vector under the time-dependent Hamiltonian defined by
+        the control amplitudes and computes the inner product of the final state
+        vector with a fixed vector using
+        `evolved_inner_product()`
+        from `PySTE <https://PySTE.readthedocs.io>`__.
+
+        Parameters
+        ----------
+        frequencies: NDArray[Shape[`qubits`], float]
+            The frequencies of the to drive X on each of the qubits
+        amplitudes: NDArray[Shape[`qubits`], complex]
+            The amplitude of to drive X on each of the qubits
+        T: float
+            The time to evolve the system for
+        fixed_vector : NDArray[Shape[:attr:`dim`], complex]
+            The fixed vector to calculate the inner product with.
+
+        Warning
+        -------
+        Keyword arguments are not supported.
+
+        Returns
+        -------
+        complex
+            The inner product of the evolved state vector with the fixed vector.
+
+        See Also
+        --------
+        * `evolved_inner_product_all()`
+        """
+        ...
+    def evolved_inner_product_all(self, *args) -> complex:
+        """
+        Evolves a state vector under the time-dependent Hamiltonian defined by
+        the control amplitudes and computes the innper product of state at each
+        time-step with a fixed vector using
+        `evolved_inner_product_all()`
+        from `PySTE <https://PySTE.readthedocs.io>`__.
+
+        Parameters
+        ----------
+        frequencies: NDArray[Shape[`qubits`], float]
+            The frequencies of the to drive X on each of the qubits
+        amplitudes: NDArray[Shape[`qubits`], complex]
+            The amplitude of to drive X on each of the qubits
+        T: float
+            The time to evolve the system for
+        fixed_vector : NDArray[Shape[:attr:`dim`], complex]
+            The fixed vector to calculate the inner product with.
+
+        Warning
+        -------
+        Keyword arguments are not supported.
+
+        Returns
+        -------
+        NDArray[Shape[n_time_steps+1], complex]
+            The inner product of state at each integrator time step (including
+            the initial state) with the fixed vector.
+
+        See Also
+        --------
+        * `evolved_inner_product()`
+        """
+        ...
+    def get_evolution(self, *args) -> np.ndarray[complex]:
+        """
+        Computes the unitary evolution of the system under the time-dependent
+        Hamiltonian defined by the control amplitudes using
+        `get_evolution()`
+        from `PySTE <https://PySTE.readthedocs.io>`__.
+
+        Parameters
+        ----------
+        frequencies: NDArray[Shape[`qubits`], float]
+            The frequencies of the to drive X on each of the qubits
+        amplitudes: NDArray[Shape[`qubits`], complex]
+            The amplitude of to drive X on each of the qubits
+        T: float
+            The time to evolve the system for
+
+        Warning
+        -------
+        Keyword arguments are not supported.
+
+        Returns
+        -------
+        NDArray[Shape[:attr:`dim`, :attr:`dim`], complex]
+            The unitary corresponding to the evolution of the system.
+
+        See Also
+        --------
+        * `propagate()`
+        * `propagate_collection()`
+        * `propagate_all()`
+        """
+        ...
+    def evolved_gate_infidelity(self, *args) -> float:
+        """
+        Evolves the system under the time-dependent Hamiltonian defined by
+        the control amplitudes and computes the gate infidelity to the target
+        gate using
+        `evolved_gate_infidelity()`
+        from `PySTE <https://PySTE.readthedocs.io>`__.
+
+        Parameters
+        ----------
+        frequencies: NDArray[Shape[`qubits`], float]
+            The frequencies of the to drive X on each of the qubits
+        amplitudes: NDArray[Shape[`qubits`], complex]
+            The amplitude of to drive X on each of the qubits
+        T: float
+            The time to evolve the system for
+        target : NDArray[Shape[:attr:`dim`], complex]
+            The target gate to calculate the gate infidelity with respect to.
+
+        Warning
+        -------
+        Keyword arguments are not supported.
+
+        Returns
+        -------
+        float
+            The gate infidelity
+
+        See Also
+        --------
+        * `gate_gradient()`
         """
         ...
     def get_driving_pulses(self,
@@ -347,9 +487,14 @@ class ExampleSubclass(QuantumSystem):
         * `propagate()`
         * `propagate_collection()`
         * `propagate_all()`
+        * `get_evolution()`
         * `evolved_expectation_value()`
         * `evolved_expectation_value_all()`
+        * `evolved_inner_product()`
+        * `evolved_inner_product_all()`
+        * `evolved_gate_infidelity()`
         * `gradient()`
+        * `gate_gradient()`
         """
         ...
     def _eager_processing(self,
@@ -461,5 +606,41 @@ class ExampleSubclass(QuantumSystem):
         --------
         * `evolved_expectation_value()`
         * `evolved_expectation_value_all()`
+        * `gate_gradient()`
+        """
+        ...
+    def gate_gradient(self, *args) -> tuple[float, np.ndarray[float]]:
+        """
+        Evolves the system under the time-dependent Hamiltonian defined by
+        the control amplitudes and computes the gate infidelity to the target
+        gate and then computes the gradient with respect to the first argument
+        (``args[0]``) using
+        `gate_switching_function()`
+        from `PySTE <https://PySTE.readthedocs.io>`__.
+
+        Parameters
+        ----------
+        frequencies: NDArray[Shape[`qubits`], float]
+            The frequencies of the to drive X on each of the qubits
+        amplitudes: NDArray[Shape[`qubits`], complex]
+            The amplitude of to drive X on each of the qubits
+        T: float
+            The time to evolve the system for
+        target : NDArray[Shape[:attr:`dim`], complex]
+            The target gate to calculate the gate infidelity with respect to.
+
+        Warning
+        -------
+        Keyword arguments are not supported.
+
+        Returns
+        -------
+        tuple[complex, NDArray[Shape[n_parameters], float]]
+            A tuple of the gate infidelity value and the gradient.
+
+        See Also
+        --------
+        * `evolved_gate_infidelity()`
+        * `gradient()`
         """
         ...

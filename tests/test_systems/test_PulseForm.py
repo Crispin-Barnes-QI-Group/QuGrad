@@ -1,4 +1,5 @@
 import numpy as np
+import tensorflow as tf
 
 from qugrad import QuantumSystem, HilbertSpace
 from qugrad.systems import PulseForm
@@ -12,6 +13,18 @@ def pulse_function():
                              [1,    1,     1    ]])
     dt = 0.1
     initial_state = np.array([1, 0])
+    frequencies = np.array([0.5, 0, 2.5])
+    number_channels = [1, 2]
+    return ctrl_amp_env, initial_state, dt, frequencies, number_channels
+
+def parameterised_pulse_function(x):
+    ctrl_amp_env = np.array([[1+2j, 4,     8    ],
+                             [2,    7+ 5j, 9+10j],
+                             [  3j,    6j,   11j],
+                             [1,    1,     1    ]])
+    ctrl_amp_env = x[0]*tf.cos(x[1]*ctrl_amp_env)+x[2]
+    dt = 0.1
+    initial_state = np.array([1, 0], dtype=np.complex128)
     frequencies = np.array([0.5, 0, 2.5])
     number_channels = [1, 2]
     return ctrl_amp_env, initial_state, dt, frequencies, number_channels
@@ -140,3 +153,46 @@ def test_appended_read_only():
         pass
     else:
         raise AssertionError("PulseFrom.appended should be read-only")
+
+def test_pulse_form_gradient():
+    H0 = Z
+    Hs = [X, Y]
+    O = X+Y+Z
+    x = np.ones(3)
+    hilbert_space = HilbertSpace([0, 1])
+    original_system = QuantumSystem(H0, Hs, hilbert_space)
+    pulse_form = original_system.pulse_form(parameterised_pulse_function)
+    expval, gradient = pulse_form.gradient(x, O)
+    assert np.array_equal(expval, pulse_form.evolved_expectation_value(x, O))
+
+    eps = 1E-6
+    fd_expval = np.empty_like(x)
+    for i in range(len(fd_expval)):
+        new_x = x.copy()
+        new_x[i] += eps
+        expval2 = pulse_form.evolved_expectation_value(new_x, O)
+        fd_expval[i] = (expval2 - expval).real / eps
+    assert np.allclose(gradient, fd_expval)
+
+def test_pulse_form_gate_gradient():
+    H0 = Z
+    Hs = [X, Y]
+    target = np.array([[1, 1],
+                       [1, -1]],
+                      dtype=complex)
+    target /= np.sqrt(2) # Hadamard gate
+    x = np.ones(3)
+    hilbert_space = HilbertSpace([0, 1])
+    original_system = QuantumSystem(H0, Hs, hilbert_space)
+    pulse_form = original_system.pulse_form(parameterised_pulse_function)
+    infidelity, gradient = pulse_form.gate_gradient(x, target)
+    assert np.array_equal(infidelity, pulse_form.evolved_gate_infidelity(x, target))
+
+    eps = 1E-6
+    fd_infidelity = np.empty_like(x)
+    for i in range(len(fd_infidelity)):
+        new_x = x.copy()
+        new_x[i] += eps
+        infidelity2 = pulse_form.evolved_gate_infidelity(new_x, target)
+        fd_infidelity[i] = (infidelity2 - infidelity) / eps
+    assert np.allclose(gradient, fd_infidelity)

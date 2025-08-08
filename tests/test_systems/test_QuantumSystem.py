@@ -4,8 +4,14 @@ import py_ste
 from py_ste import evolvers
 
 from qugrad import QuantumSystem, HilbertSpace
-from qugrad.systems._systems import generate_channel_couplings, ExpValCustom
-from .pauli_matrices import X, Y, Z
+from qugrad.systems._systems import generate_channel_couplings, ExpValCustom, \
+                                    GateInfidelityCustom
+X = np.array([[0,  1],  # Pauli-X
+              [1,  0]])
+Y = np.array([[0, -1j], # Pauli-Y
+              [1j, 0]])
+Z = np.array([[1,  0],  # Pauli-Z
+              [0, -1]])
 
 def test_generate_channel_couplings():
     number_channels = [1, 4, 2, 3]
@@ -399,6 +405,91 @@ def test_evolved_expectation_value_all():
     assert np.array_equal(value,
                           evolver.evolved_expectation_value_all(*py_ste_args, O))
 
+def test_evolved_inner_product():
+    H0 = Z
+    Hs = [X, Y]
+    fixed_vector = np.array([1.5, 0.2+0.3j], dtype=complex)
+    hilbert_space = HilbertSpace([0, 1])
+    quantum_system = QuantumSystem(H0, Hs, hilbert_space)
+    ctrl_amp_env = np.array([[1+2j, 4,     8    ],
+                             [2,    7+ 5j, 9+10j],
+                             [  3j,    6j,   11j],
+                             [1,    1,     1    ]])
+    dt = 0.1
+    initial_state = np.array([1, 0], dtype=complex)
+    frequencies = np.array([0.5, 0, 2.5])
+    number_channels = [1, 2]
+    args = (ctrl_amp_env, initial_state, dt, frequencies, number_channels)
+    value = quantum_system.evolved_inner_product(*args, fixed_vector)
+    py_ste_args = quantum_system.get_driving_pulses(*args)
+    evolver = py_ste.get_unitary_evolver(H0, Hs)
+    assert np.array_equal(value,
+                          evolver.evolved_inner_product(*py_ste_args,
+                                                        fixed_vector))
+
+def test_evolved_inner_product_all():
+    H0 = Z
+    Hs = [X, Y]
+    fixed_vector = np.array([1.5, 0.2+0.3j], dtype=complex)
+    hilbert_space = HilbertSpace([0, 1])
+    quantum_system = QuantumSystem(H0, Hs, hilbert_space)
+    ctrl_amp_env = np.array([[1+2j, 4,     8    ],
+                             [2,    7+ 5j, 9+10j],
+                             [  3j,    6j,   11j],
+                             [1,    1,     1    ]])
+    dt = 0.1
+    initial_state = np.array([1, 0], dtype=complex)
+    frequencies = np.array([0.5, 0, 2.5])
+    number_channels = [1, 2]
+    args = (ctrl_amp_env, initial_state, dt, frequencies, number_channels)
+    value = quantum_system.evolved_inner_product_all(*args, fixed_vector)
+    py_ste_args = quantum_system.get_driving_pulses(*args)
+    evolver = py_ste.get_unitary_evolver(H0, Hs)
+    assert np.array_equal(value,
+                          evolver.evolved_inner_product_all(*py_ste_args,
+                                                            fixed_vector))
+
+def test_get_evolution():
+    H0 = Z
+    Hs = [X, Y]
+    hilbert_space = HilbertSpace([0, 1])
+    quantum_system = QuantumSystem(H0, Hs, hilbert_space)
+    ctrl_amp_env = np.array([[1+2j, 4,     8    ],
+                             [2,    7+ 5j, 9+10j],
+                             [  3j,    6j,   11j],
+                             [1,    1,     1    ]])
+    dt = 0.1
+    frequencies = np.array([0.5, 0, 2.5])
+    number_channels = [1, 2]
+    args = (ctrl_amp_env, None, dt, frequencies, number_channels)
+    state = quantum_system.get_evolution(*args)
+    ctrl_amp, _, dt = quantum_system.get_driving_pulses(*args)
+    evolver = py_ste.get_unitary_evolver(H0, Hs)
+    assert np.array_equal(state, evolver.get_evolution(ctrl_amp, dt))
+
+def test_evolved_gate_infidelity():
+    H0 = Z
+    Hs = [X, Y]
+    target = np.array([[1, 1],
+                       [1, -1]],
+                      dtype=complex)
+    target /= np.sqrt(2) # Hadamard gate
+    hilbert_space = HilbertSpace([0, 1])
+    quantum_system = QuantumSystem(H0, Hs, hilbert_space)
+    ctrl_amp_env = np.array([[1+2j, 4,     8    ],
+                             [2,    7+ 5j, 9+10j],
+                             [  3j,    6j,   11j],
+                             [1,    1,     1    ]])
+    dt = 0.1
+    frequencies = np.array([0.5, 0, 2.5])
+    number_channels = [1, 2]
+    args = (ctrl_amp_env, None, dt, frequencies, number_channels)
+    value = quantum_system.evolved_gate_infidelity(*args, target)
+    ctrl_amp, _, dt = quantum_system.get_driving_pulses(*args)
+    evolver = py_ste.get_unitary_evolver(H0, Hs)
+    assert np.array_equal(value,
+                          evolver.evolved_gate_infidelity(ctrl_amp, dt, target))
+
 def test_ExpValCustom_initialisation():
     H0 = Z
     Hs = [X, Y]
@@ -457,3 +548,88 @@ def test_ExpValCustom_run_gradient():
                                                          dt,
                                                          O)[1]
     assert np.array_equal(grad, grad2)
+
+def test_gradient():
+    H0 = Z
+    Hs = [X, Y]
+    O = X+Y+Z
+    hilbert_space = HilbertSpace([0, 1])
+    quantum_system = QuantumSystem(H0, Hs, hilbert_space)
+    dt = 0.1
+    initial_state = np.array([1, 0], dtype=complex)
+    ctrl_amp = np.array([[1, 4,   8],
+                         [2, 7.4, 9],
+                         [3, 6,   0],
+                         [1, 1,   1]],
+                        dtype=np.complex128)
+    frequencies = np.array([0.5, 0, 2.5])
+    number_channels = [1, 2]
+    E, gradient = quantum_system.gradient(ctrl_amp,
+                                          initial_state,
+                                          dt,
+                                          frequencies,
+                                          number_channels,
+                                          O)
+    expected_E = \
+        quantum_system.evolved_expectation_value(ctrl_amp,
+                                                 initial_state,
+                                                 dt,
+                                                 frequencies,
+                                                 number_channels,
+                                                 O)
+    expval = ExpValCustom(quantum_system, initial_state, dt, O)
+    x = tf.constant(ctrl_amp)
+    with tf.GradientTape(persistent=False) as tape:
+        tape.watch(x)
+        y, _, _ = quantum_system._processing(x,
+                                             initial_state,
+                                             dt,
+                                             frequencies,
+                                             number_channels)
+        value = expval.run(y)
+    expected_gradient = tf.convert_to_tensor(tape.gradient(value, x)).numpy()
+    assert np.allclose(E, expected_E)
+    assert np.allclose(gradient, expected_gradient.real)
+def test_gate_gradient():
+    H0 = Z
+    Hs = [X, Y]
+    target = np.array([[1, 1],
+                       [1, -1]],
+                      dtype=complex)
+    target /= np.sqrt(2) # Hadamard gate
+    hilbert_space = HilbertSpace([0, 1])
+    quantum_system = QuantumSystem(H0, Hs, hilbert_space)
+    dt = 0.1
+    ctrl_amp = np.array([[1, 4,   8],
+                         [2, 7.4, 9],
+                         [3, 6,   0],
+                         [1, 1,   1]],
+                        dtype=np.complex128)
+    frequencies = np.array([0.5, 0, 2.5])
+    number_channels = [1, 2]
+    I, gradient = quantum_system.gate_gradient(ctrl_amp,
+                                               None,
+                                               dt,
+                                               frequencies,
+                                               number_channels,
+                                               target)
+    expected_I = \
+        quantum_system.evolved_gate_infidelity(ctrl_amp,
+                                               None,
+                                               dt,
+                                               frequencies,
+                                               number_channels,
+                                               target)
+    infidelity = GateInfidelityCustom(quantum_system, dt, target)
+    x = tf.constant(ctrl_amp)
+    with tf.GradientTape(persistent=False) as tape:
+        tape.watch(x)
+        y, _, _ = quantum_system._processing(x,
+                                             None,
+                                             dt,
+                                             frequencies,
+                                             number_channels)
+        value = infidelity.run(y)
+    expected_gradient = tf.convert_to_tensor(tape.gradient(value, x)).numpy()
+    assert np.allclose(I, expected_I)
+    assert np.allclose(gradient, expected_gradient.real)
