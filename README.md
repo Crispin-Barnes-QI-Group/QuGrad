@@ -1,6 +1,8 @@
 # QuGrad
 A Python package for quantum optimal control.
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17116721.svg)](https://doi.org/10.5281/zenodo.17116721)
+
 [![Unit Tests](https://github.com/Christopher-K-Long/QuGrad/actions/workflows/test-python-package.yml/badge.svg)](https://github.com/Christopher-K-Long/QuGrad/actions/workflows/test-python-package.yml)
 
 ## Installation
@@ -22,9 +24,9 @@ conda install -c conda-forge libstdcxx-ng
 ### Requirements
 
 Requires:
-- [PySTE](https://PySTE.readthedocs.io)
-- [TensorFlow](https://www.tensorflow.org)
-- [NumPy](https://numpy.org)
+- [PySTE](https://PySTE.readthedocs.io) (== 1.*) ([doi:10.5281/zenodo.17116431](https://doi.org/10.5281/zenodo.17116431))
+- [TensorFlow](https://www.tensorflow.org) (== 2.*)
+- [NumPy](https://numpy.org) (>= 1.21, < 3)
 
 #### Additional requirements for testing
 
@@ -41,4 +43,4 @@ Source code can be found at: [https://github.com/Christopher-K-Long/QuGrad](http
 
 ## Version and Changes
 
-The current version is [`1.0.1`](ChangeLog.md#release-101). Please see the [Change Log](ChangeLog.md) for more details. QuGrad uses [semantic versioning](https://semver.org/).
+The current version is [`1.0.2`](ChangeLog.md#release-102). Please see the [Change Log](ChangeLog.md) for more details. QuGrad uses [semantic versioning](https://semver.org/).
