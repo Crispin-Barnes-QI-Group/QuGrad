@@ -22,7 +22,7 @@ conda install -c conda-forge libstdcxx-ng
 ### Requirements
 
 Requires:
-- [PySTE](https://PySTE.readthedocs.io) (== 1.*) ([doi:10.5281/zenodo.17116431](https://doi.org/10.5281/zenodo.17116431))
+- [PySTE](https://PySTE.readthedocs.io) (>= 1.1.0, < 2) ([doi:10.5281/zenodo.17116431](https://doi.org/10.5281/zenodo.17116431))
 - [TensorFlow](https://www.tensorflow.org) (== 2.*)
 - [NumPy](https://numpy.org) (>= 1.21, < 3)
 
