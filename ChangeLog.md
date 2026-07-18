@@ -11,6 +11,11 @@ This release incorporates the functionality added in [PySTE](https://PySTE.readt
 - Added `get_evolution()` to generate the unitary describing the systems' evolution.
 - Added unit tests for these functions.
 - Version pinning requiring `py-ste >= 1.1.0, < 2` has been added.
+- Updated the GitHub actions:
+    - `actions/checkout@v4` -> `actions/checkout@v7`
+    - `actions/setup-python@v5` -> `actions/setup-python@v6`
+    - `actions/upload-artifact@v4` -> `actions/upload-artifact@v7`
+    - `actions/download-artifact@v4` -> `actions/download-artifact@v8`
 
 This release supports the article:
 
